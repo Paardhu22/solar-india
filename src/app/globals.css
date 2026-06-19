@@ -1,26 +1,249 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* =========================================================================
+   SOLAR ESTIMATOR — Editorial / Modern-Maximalist Design System
+   White paper background · thick black ink · flat bold color · oversized type
+   ========================================================================= */
+
+@theme {
+  /* Surfaces */
+  --color-paper: #faf9f5;      /* off-white base */
+  --color-bone: #efece2;       /* deeper paper for panels */
+  --color-snow: #ffffff;       /* pure white blocks */
+  --color-ink: #0d0d0c;        /* near-black text + outlines */
+  --color-ink-soft: #5a574e;   /* muted ink */
+
+  /* Flat bold palette */
+  --color-solar: #ffc400;      /* solar yellow */
+  --color-electric: #1f3cff;   /* electric blue */
+  --color-flame: #ff5a1a;      /* orange */
+  --color-pink: #ff3d8b;       /* hot pink — small accents */
+  --color-teal: #03bfae;       /* teal */
+  --color-violet: #4b1fe0;     /* deep purple — rare */
+
+  /* Typefaces (vars injected by next/font on <html>) */
+  --font-display: var(--font-clash), "Arial Black", "Helvetica Neue", sans-serif;
+  --font-grotesk: var(--font-grotesk), ui-sans-serif, system-ui, sans-serif;
+
+  /* Motion */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-elastic: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+/* ------------------------------------------------------------------ base */
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+    scroll-behavior: auto; /* Lenis owns smooth scroll */
+  }
+
+  body {
+    min-height: 100svh;
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-grotesk);
+    font-feature-settings: "ss01", "cv01", "tnum";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
+
+  /* Lock document scroll while in a fixed full-viewport scene */
+  body[data-lock="true"] {
+    overflow: hidden;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    line-height: 0.86;
+    letter-spacing: -0.02em;
+  }
+
+  ::selection {
+    background: var(--color-solar);
+    color: var(--color-ink);
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--color-electric);
+    outline-offset: 3px;
+  }
+
+  button {
+    font-family: inherit;
+    cursor: pointer;
+    background: none;
+    border: none;
+    color: inherit;
+  }
+
+  input {
+    font-family: inherit;
+    color: inherit;
+  }
+
+  /* number input — strip spinners, it becomes display type */
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+
+  /* range — chunky editorial slider */
+  input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    background: transparent;
+    cursor: pointer;
+  }
+  input[type="range"]::-webkit-slider-runnable-track {
+    height: 6px;
+    background: var(--color-ink);
+    border-radius: 0;
+  }
+  input[type="range"]::-moz-range-track {
+    height: 6px;
+    background: var(--color-ink);
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 34px;
+    width: 34px;
+    margin-top: -14px;
+    background: var(--color-solar);
+    border: 3px solid var(--color-ink);
+    border-radius: 999px;
+    box-shadow: 4px 4px 0 0 var(--color-ink);
+    transition: transform 0.15s var(--ease-elastic);
+  }
+  input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.12);
+  }
+  input[type="range"]::-webkit-slider-thumb:active {
+    transform: scale(0.94);
+    box-shadow: 2px 2px 0 0 var(--color-ink);
+  }
+  input[type="range"]::-moz-range-thumb {
+    height: 34px;
+    width: 34px;
+    background: var(--color-solar);
+    border: 3px solid var(--color-ink);
+    border-radius: 999px;
+    box-shadow: 4px 4px 0 0 var(--color-ink);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ------------------------------------------------------------- utilities */
+@layer utilities {
+  .font-display { font-family: var(--font-display); }
+  .font-grotesk { font-family: var(--font-grotesk); }
+
+  /* Tight oversized display lockups */
+  .lede {
+    line-height: 0.82;
+    letter-spacing: -0.03em;
+  }
+
+  /* Outlined (hollow) typography */
+  .text-hollow {
+    color: transparent;
+    -webkit-text-stroke: 2px var(--color-ink);
+  }
+  .text-hollow-thin {
+    color: transparent;
+    -webkit-text-stroke: 1.4px var(--color-ink);
+  }
+  @supports not ((-webkit-text-stroke: 2px black)) {
+    .text-hollow, .text-hollow-thin { color: var(--color-ink); }
+  }
+
+  /* Offset print shadow — the editorial "sticker" look */
+  .shadow-ink { box-shadow: 6px 6px 0 0 var(--color-ink); }
+  .shadow-ink-sm { box-shadow: 4px 4px 0 0 var(--color-ink); }
+  .shadow-ink-lg { box-shadow: 10px 10px 0 0 var(--color-ink); }
+
+  .tnum { font-variant-numeric: tabular-nums; }
+
+  /* Hairline grid texture */
+  .bg-grid {
+    background-image:
+      linear-gradient(to right, rgba(13, 13, 12, 0.07) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(13, 13, 12, 0.07) 1px, transparent 1px);
+    background-size: 64px 64px;
+  }
+
+  .will-move { will-change: transform, opacity; }
+
+  /* Ambient keyframe helpers (CSS for cheap GPU motion) */
+  .anim-spin-slow { animation: spin-slow 32s linear infinite; }
+  .anim-spin-rev { animation: spin-slow 26s linear infinite reverse; }
+  .anim-float { animation: float-y 9s ease-in-out infinite; }
+  .anim-drift { animation: drift 14s ease-in-out infinite; }
+  .anim-marquee { animation: marquee 28s linear infinite; }
+}
+
+/* ---------------------------------------------------------------- keyframes */
+@keyframes spin-slow {
+  to { transform: rotate(360deg); }
+}
+@keyframes float-y {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-22px); }
+}
+@keyframes drift {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  33% { transform: translate(20px, -14px) rotate(4deg); }
+  66% { transform: translate(-16px, 10px) rotate(-3deg); }
+}
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+@keyframes grain {
+  0%, 100% { transform: translate(0, 0); }
+  10% { transform: translate(-5%, -10%); }
+  30% { transform: translate(3%, -15%); }
+  50% { transform: translate(12%, 9%); }
+  70% { transform: translate(-9%, 4%); }
+  90% { transform: translate(-1%, 7%); }
+}
+
+/* ------------------------------------------------------------------- lenis */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+/* ------------------------------------------------------------ reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }
