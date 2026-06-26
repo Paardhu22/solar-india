@@ -39,11 +39,12 @@ export default function RoofAreaQuestion({ value, onAnswer, onBack }: Props) {
             value={area}
             onChange={setArea}
             min={MIN}
-            max={MAX}
+            max={100000}
             step={50}
             suffix="sq ft"
             accent="var(--color-teal)"
             label="Available roof area"
+            hideControls
           />
           <div className="mt-12">
             <ContinueButton onClick={() => onAnswer(area)} />

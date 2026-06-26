@@ -14,6 +14,7 @@ interface NumberFieldProps {
   accent?: string
   className?: string
   label?: string
+  hideControls?: boolean
 }
 
 /** A giant, directly-editable number with a chunky slider. The input IS the headline. */
@@ -28,6 +29,7 @@ export default function NumberField({
   accent = 'var(--color-solar)',
   className,
   label,
+  hideControls,
 }: NumberFieldProps) {
   const id = useId()
   const clamp = (n: number) => Math.min(max, Math.max(min, n))
@@ -51,7 +53,10 @@ export default function NumberField({
             const raw = Number(e.target.value.replace(/[^0-9]/g, ''))
             if (!Number.isNaN(raw)) onChange(clamp(raw))
           }}
-          className="bg-transparent text-center font-display font-semibold leading-[0.8] tracking-tight outline-none caret-[var(--accent)]"
+          className={cn(
+            'bg-transparent text-center font-display font-semibold leading-[0.8] tracking-tight outline-none caret-[var(--accent)] transition-colors',
+            hideControls && 'border-b-[0.05em] border-ink/20 focus:border-[var(--accent)] pb-2 md:pb-4'
+          )}
           style={
             {
               '--accent': accent,
@@ -67,37 +72,39 @@ export default function NumberField({
         )}
       </div>
 
-      <div className="mx-auto mt-10 flex max-w-xl items-center gap-4">
-        <button
-          type="button"
-          data-cursor
-          aria-label="decrease"
-          onClick={() => onChange(clamp(value - step))}
-          className="grid h-11 w-11 shrink-0 place-items-center border-2 border-ink text-2xl leading-none shadow-ink-sm transition-transform hover:-translate-y-0.5 active:translate-y-0"
-        >
-          −
-        </button>
-        <input
-          type="range"
-          min={min}
-          max={max}
-          step={step}
-          value={value}
-          aria-label={label}
-          onChange={(e) => onChange(Number(e.target.value))}
-          className="flex-1"
-        />
-        <button
-          type="button"
-          data-cursor
-          aria-label="increase"
-          onClick={() => onChange(clamp(value + step))}
-          className="grid h-11 w-11 shrink-0 place-items-center border-2 border-ink text-2xl leading-none shadow-ink-sm transition-transform hover:-translate-y-0.5 active:translate-y-0"
-          style={{ background: accent }}
-        >
-          +
-        </button>
-      </div>
+      {!hideControls && (
+        <div className="mx-auto mt-10 flex max-w-xl items-center gap-4">
+          <button
+            type="button"
+            data-cursor
+            aria-label="decrease"
+            onClick={() => onChange(clamp(value - step))}
+            className="grid h-11 w-11 shrink-0 place-items-center border-2 border-ink text-2xl leading-none shadow-ink-sm transition-transform hover:-translate-y-0.5 active:translate-y-0"
+          >
+            −
+          </button>
+          <input
+            type="range"
+            min={min}
+            max={max}
+            step={step}
+            value={value}
+            aria-label={label}
+            onChange={(e) => onChange(Number(e.target.value))}
+            className="flex-1"
+          />
+          <button
+            type="button"
+            data-cursor
+            aria-label="increase"
+            onClick={() => onChange(clamp(value + step))}
+            className="grid h-11 w-11 shrink-0 place-items-center border-2 border-ink text-2xl leading-none shadow-ink-sm transition-transform hover:-translate-y-0.5 active:translate-y-0"
+            style={{ background: accent }}
+          >
+            +
+          </button>
+        </div>
+      )}
     </div>
   )
 }
