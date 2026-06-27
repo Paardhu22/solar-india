@@ -6,7 +6,7 @@ import { formatINR } from '@/lib/calculations'
 import SplitText from '@/components/primitives/SplitText'
 import CountUp from '@/components/primitives/CountUp'
 import SmoothScroll from '@/components/chrome/SmoothScroll'
-import Ending from '@/components/ending/Ending'
+import ARViewer from './ARViewer'
 import { Burst, Disc } from '@/components/art/Shapes'
 
 interface Props {
@@ -164,8 +164,8 @@ export default function ResultsScreen({ results, answers, insights, onRestart }:
         </section>
       )}
 
-      {/* ---------- ENDING + CTA + FOOTER ---------- */}
-      <Ending onRestart={onRestart} />
+      {/* ---------- AR VIEWER ---------- */}
+      <ARViewer onRestart={onRestart} />
     </div>
   )
 }
