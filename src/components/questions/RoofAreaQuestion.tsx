@@ -19,12 +19,12 @@ const CELLS = 36
 
 // Q4 — the roof grid fills up as you drag. Input becomes the artwork.
 export default function RoofAreaQuestion({ value, onAnswer, onBack }: Props) {
-  const [area, setArea] = useState(value ?? 1000)
-  const filled = Math.round(((area - MIN) / (MAX - MIN)) * CELLS)
+  const [area, setArea] = useState<number | ''>(value ?? '')
+  const filled = area === '' ? 0 : Math.round(((area - MIN) / (MAX - MIN)) * CELLS)
 
   return (
     <Scene accent="var(--color-teal)" onBack={onBack}>
-      <StepNumber n={4} className="absolute -top-6 left-1/2 z-0 -translate-x-1/2" />
+      <StepNumber n={3} className="absolute -top-6 left-1/2 z-0 -translate-x-1/2" />
 
       <div className="relative z-10 grid h-full grid-rows-[auto_1fr] items-center gap-8 px-5 pt-24 md:grid-cols-2 md:grid-rows-1 md:px-10 md:pt-0">
         <div className="flex flex-col justify-center">
@@ -38,6 +38,7 @@ export default function RoofAreaQuestion({ value, onAnswer, onBack }: Props) {
           <NumberField
             value={area}
             onChange={setArea}
+            onEnter={() => area !== '' && area >= MIN && onAnswer(area)}
             min={MIN}
             max={100000}
             step={50}
@@ -47,7 +48,7 @@ export default function RoofAreaQuestion({ value, onAnswer, onBack }: Props) {
             hideControls
           />
           <div className="mt-12">
-            <ContinueButton onClick={() => onAnswer(area)} />
+            <ContinueButton onClick={() => onAnswer(area as number)} disabled={area === '' || area < MIN} />
           </div>
         </div>
 

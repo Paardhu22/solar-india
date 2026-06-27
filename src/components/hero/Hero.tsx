@@ -8,7 +8,7 @@ import {
   useReducedMotion,
   type MotionValue,
 } from 'framer-motion'
-import { type ReactNode } from 'react'
+import { type ReactNode, useEffect } from 'react'
 import SplitText from '@/components/primitives/SplitText'
 import MagneticButton from '@/components/primitives/MagneticButton'
 import { Disc, Ring, Burst, Square, Triangle, HalfDisc, Plus, Arcs } from '@/components/art/Shapes'
@@ -42,6 +42,16 @@ export default function Hero({ onBegin }: { onBegin: () => void }) {
   const my = useMotionValue(0)
   const px = useSpring(mx, { stiffness: 60, damping: 18 })
   const py = useSpring(my, { stiffness: 60, damping: 18 })
+
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Enter') {
+        onBegin()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [onBegin])
 
   function onMove(e: React.MouseEvent) {
     if (reduce) return

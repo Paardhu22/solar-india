@@ -24,7 +24,7 @@ const OPTIONS: { key: CleaningFrequency; label: string; sub: string; h: number }
 export default function CleaningQuestion({ value, onAnswer, onBack }: Props) {
   return (
     <Scene accent="var(--color-electric)" onBack={onBack}>
-      <StepNumber n={7} className="absolute -right-3 -top-6 z-0 md:-right-5" />
+      <StepNumber n={4} className="absolute -right-3 -top-6 z-0 md:-right-5" />
 
       <div className="relative z-10 mx-auto flex h-full w-full max-w-5xl flex-col justify-center px-5 pt-20 md:px-10 md:pt-0">
         <h2 className="mb-10 max-w-2xl font-display text-[10vw] font-semibold leading-[0.86] md:mb-14 md:text-[5vw]">

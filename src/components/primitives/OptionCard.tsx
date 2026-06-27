@@ -38,8 +38,7 @@ export default function OptionCard({
       initial={reduce ? false : { opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.04 * index, ease: [0.16, 1, 0.3, 1] }}
-      whileHover={reduce ? undefined : { x: -4, y: -4 }}
-      whileTap={{ x: 0, y: 0 }}
+
       className={cn(
         'group relative flex w-full items-center gap-4 border-2 border-ink px-5 py-4 text-left transition-shadow duration-200',
         selected ? 'shadow-[2px_2px_0_0_var(--color-ink)]' : 'shadow-ink-sm hover:shadow-ink',

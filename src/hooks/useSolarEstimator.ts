@@ -11,7 +11,7 @@ export function useSolarEstimator() {
   const [results, setResults] = useState<SolarResults | null>(null)
   const [insights, setInsights] = useState<string[]>([])
 
-  const totalQuestions = 8
+  const totalQuestions = 5
 
   const runCalculation = useCallback((finalAnswers: SolarAnswers) => {
     setPhase('loading')

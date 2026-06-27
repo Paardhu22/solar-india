@@ -17,14 +17,7 @@ export default function Navigation({ step, total, onSkip, onHome, invert }: NavP
     <nav
       className={`fixed inset-x-0 top-0 z-50 flex items-center justify-between px-5 py-4 md:px-10 md:py-6 ${ink}`}
     >
-      <button
-        onClick={onHome}
-        data-cursor
-        className="group flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.28em] md:text-xs"
-      >
-        <span className="inline-block h-2.5 w-2.5 rounded-full bg-solar ring-1 ring-ink transition-transform duration-300 group-hover:scale-125" />
-        Solar&nbsp;Estimator
-      </button>
+      <div />
 
       <div className="flex items-center gap-5 md:gap-8">
         <AnimatePresence>

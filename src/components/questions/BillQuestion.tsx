@@ -16,7 +16,7 @@ interface Props {
 
 // Q1 — the number sits inside the sun. Centered.
 export default function BillQuestion({ value, onAnswer, onBack }: Props) {
-  const [bill, setBill] = useState(value ?? 4500)
+  const [bill, setBill] = useState<number | ''>(value ?? '')
 
   return (
     <Scene accent="var(--color-solar)" onBack={onBack}>
@@ -35,6 +35,7 @@ export default function BillQuestion({ value, onAnswer, onBack }: Props) {
         <NumberField
           value={bill}
           onChange={setBill}
+          onEnter={() => bill !== '' && bill >= 500 && onAnswer(bill)}
           min={500}
           max={50000}
           step={100}
@@ -42,10 +43,11 @@ export default function BillQuestion({ value, onAnswer, onBack }: Props) {
           suffix="/mo"
           accent="var(--color-solar)"
           label="Monthly electricity bill"
+          hideControls
         />
 
         <div className="mt-16 md:mt-20">
-          <ContinueButton onClick={() => onAnswer(bill)} />
+          <ContinueButton onClick={() => onAnswer(bill as number)} disabled={bill === '' || bill < 500} />
         </div>
       </div>
     </Scene>

@@ -39,17 +39,11 @@ export default function Home() {
       case 1:
         return <LocationQuestion key={1} value={answers.location} onAnswer={(v) => s.handleAnswer('location', v)} onBack={back} />
       case 2:
-        return <WeatherQuestion key={2} value={answers.weather} onAnswer={(v) => s.handleAnswer('weather', v)} onBack={back} />
+        return <RoofAreaQuestion key={2} value={answers.roofArea} onAnswer={(v) => s.handleAnswer('roofArea', v)} onBack={back} />
       case 3:
-        return <RoofAreaQuestion key={3} value={answers.roofArea} onAnswer={(v) => s.handleAnswer('roofArea', v)} onBack={back} />
+        return <CleaningQuestion key={3} value={answers.cleaning} onAnswer={(v) => s.handleAnswer('cleaning', v)} onBack={back} />
       case 4:
-        return <RoofTypeQuestion key={4} value={answers.roofType} onAnswer={(v) => s.handleAnswer('roofType', v)} onBack={back} />
-      case 5:
-        return <ShadingQuestion key={5} value={answers.shading} onAnswer={(v) => s.handleAnswer('shading', v)} onBack={back} />
-      case 6:
-        return <CleaningQuestion key={6} value={answers.cleaning} onAnswer={(v) => s.handleAnswer('cleaning', v)} onBack={back} />
-      case 7:
-        return <FutureUsageQuestion key={7} value={answers.futureUsage} onAnswer={(v) => s.handleAnswer('futureUsage', v)} onBack={back} />
+        return <FutureUsageQuestion key={4} value={answers.futureUsage} onAnswer={(v) => s.handleAnswer('futureUsage', v)} onBack={back} />
       default:
         return null
     }

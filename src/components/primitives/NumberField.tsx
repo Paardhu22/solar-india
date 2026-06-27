@@ -4,8 +4,8 @@ import { useId } from 'react'
 import { cn } from '@/lib/cn'
 
 interface NumberFieldProps {
-  value: number
-  onChange: (n: number) => void
+  value: number | ''
+  onChange: (n: number | '') => void
   min: number
   max: number
   step: number
@@ -15,6 +15,7 @@ interface NumberFieldProps {
   className?: string
   label?: string
   hideControls?: boolean
+  onEnter?: () => void
 }
 
 /** A giant, directly-editable number with a chunky slider. The input IS the headline. */
@@ -30,6 +31,7 @@ export default function NumberField({
   className,
   label,
   hideControls,
+  onEnter,
 }: NumberFieldProps) {
   const id = useId()
   const clamp = (n: number) => Math.min(max, Math.max(min, n))
@@ -48,10 +50,19 @@ export default function NumberField({
           type="text"
           inputMode="numeric"
           aria-label={label}
-          value={value.toLocaleString('en-IN')}
+          value={value === '' ? '' : value.toLocaleString('en-IN')}
           onChange={(e) => {
+            if (e.target.value === '') {
+              onChange('')
+              return
+            }
             const raw = Number(e.target.value.replace(/[^0-9]/g, ''))
-            if (!Number.isNaN(raw)) onChange(clamp(raw))
+            if (!Number.isNaN(raw)) onChange(Math.min(max, raw))
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && onEnter) {
+              onEnter()
+            }
           }}
           className={cn(
             'bg-transparent text-center font-display font-semibold leading-[0.8] tracking-tight outline-none caret-[var(--accent)] transition-colors',
@@ -78,7 +89,7 @@ export default function NumberField({
             type="button"
             data-cursor
             aria-label="decrease"
-            onClick={() => onChange(clamp(value - step))}
+            onClick={() => onChange(clamp((value || 0) - step))}
             className="grid h-11 w-11 shrink-0 place-items-center border-2 border-ink text-2xl leading-none shadow-ink-sm transition-transform hover:-translate-y-0.5 active:translate-y-0"
           >
             −
@@ -88,7 +99,7 @@ export default function NumberField({
             min={min}
             max={max}
             step={step}
-            value={value}
+            value={value === '' ? min : value}
             aria-label={label}
             onChange={(e) => onChange(Number(e.target.value))}
             className="flex-1"
@@ -97,7 +108,7 @@ export default function NumberField({
             type="button"
             data-cursor
             aria-label="increase"
-            onClick={() => onChange(clamp(value + step))}
+            onClick={() => onChange(clamp((value || 0) + step))}
             className="grid h-11 w-11 shrink-0 place-items-center border-2 border-ink text-2xl leading-none shadow-ink-sm transition-transform hover:-translate-y-0.5 active:translate-y-0"
             style={{ background: accent }}
           >

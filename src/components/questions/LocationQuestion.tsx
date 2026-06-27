@@ -45,6 +45,12 @@ export default function LocationQuestion({ value, onAnswer, onBack }: Props) {
             type="text"
             value={address}
             onChange={(e) => setAddress(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && address.trim()) {
+                e.preventDefault()
+                onAnswer({ address: address.trim() })
+              }
+            }}
             placeholder="e.g. Indiranagar, Bengaluru"
             className="w-full border-b-2 border-ink bg-transparent pb-3 font-display text-3xl outline-none placeholder:text-ink-soft/40 md:text-4xl"
           />
@@ -66,7 +72,12 @@ export default function LocationQuestion({ value, onAnswer, onBack }: Props) {
 
           <div className="mt-10">
             <ContinueButton
-              onClick={() => onAnswer({ address: address.trim() || 'Not specified' })}
+              onClick={() => {
+                if (address.trim()) {
+                  onAnswer({ address: address.trim() })
+                }
+              }}
+              disabled={!address.trim()}
             />
           </div>
         </div>
