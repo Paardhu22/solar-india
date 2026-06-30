@@ -14,8 +14,8 @@ declare global {
         alt?: string;
         ar?: boolean;
         'ar-modes'?: string;
-        'ar-modes'?: string;
         'camera-controls'?: boolean;
+        'disable-zoom'?: boolean;
         'auto-rotate'?: boolean;
         'shadow-intensity'?: string;
         scale?: string;
@@ -35,6 +35,65 @@ export default function ARViewer({ onRestart }: Props) {
   const [baseDimensions, setBaseDimensions] = useState({ x: 0, y: 0, z: 0 })
   const videoRef = useRef<HTMLVideoElement>(null)
   const modelViewerRef = useRef<HTMLElement>(null)
+  const scaleRef = useRef(1.0)
+
+  useEffect(() => {
+    scaleRef.current = scale
+  }, [scale])
+
+  useEffect(() => {
+    const el = modelViewerRef.current
+    if (!el) return
+
+    let initialDist = 0
+    let startScale = 1.0
+
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        initialDist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        )
+        startScale = scaleRef.current
+      }
+    }
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (e.touches.length === 2 && initialDist > 0) {
+        e.preventDefault()
+        const dist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        )
+        const newScale = startScale * (dist / initialDist)
+        setScale(Math.max(0.1, Math.min(newScale, 5.0)))
+      }
+    }
+
+    const onTouchEnd = (e: TouchEvent) => {
+      if (e.touches.length < 2) {
+        initialDist = 0
+      }
+    }
+
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault()
+      const newScale = scaleRef.current - e.deltaY * 0.001
+      setScale(Math.max(0.1, Math.min(newScale, 5.0)))
+    }
+
+    el.addEventListener('touchstart', onTouchStart, { passive: false })
+    el.addEventListener('touchmove', onTouchMove, { passive: false })
+    el.addEventListener('touchend', onTouchEnd)
+    el.addEventListener('wheel', onWheel, { passive: false })
+
+    return () => {
+      el.removeEventListener('touchstart', onTouchStart)
+      el.removeEventListener('touchmove', onTouchMove)
+      el.removeEventListener('touchend', onTouchEnd)
+      el.removeEventListener('wheel', onWheel)
+    }
+  }, [isMounted])
 
   useEffect(() => {
     import('@google/model-viewer')
@@ -113,20 +172,17 @@ export default function ARViewer({ onRestart }: Props) {
             ar
             ar-modes="webxr scene-viewer quick-look"
             camera-controls
+            disable-zoom
             auto-rotate
             shadow-intensity="1"
             scale={`${scale} ${scale} ${scale}`}
             style={{ 
               width: '100%', 
               height: '100%', 
-              backgroundColor: cameraActive ? 'transparent' : '#E4E2DC' 
+              backgroundColor: cameraActive ? 'transparent' : '#E4E2DC',
+              touchAction: 'none'
             }}
           >
-            {baseDimensions.x > 0 && (
-              <div className="absolute left-4 top-4 rounded-lg bg-paper/90 px-3 py-2 font-mono text-xs font-medium text-ink shadow backdrop-blur-sm">
-                {(baseDimensions.x * scale).toFixed(2)}m W × {(baseDimensions.z * scale).toFixed(2)}m L
-              </div>
-            )}
             <button
               slot="ar-button"
               className="absolute bottom-6 left-1/2 -translate-x-1/2 rounded-full bg-electric px-6 py-3 text-xs font-semibold uppercase tracking-widest text-paper shadow-lg hover:bg-ink transition-colors md:px-8 md:py-4 md:text-sm"
@@ -139,24 +195,21 @@ export default function ARViewer({ onRestart }: Props) {
             <span className="text-sm font-medium uppercase tracking-[0.2em]">Loading AR Module...</span>
           </div>
         )}
+        
+        {isMounted && baseDimensions.x > 0 && (
+          <>
+            <div className={`absolute pointer-events-none left-4 top-4 rounded-lg px-3 py-2 font-mono text-xs font-medium shadow backdrop-blur-sm transition-colors ${Math.abs(scale - 1.0) < 0.05 ? 'bg-green-500/90 text-white' : 'bg-paper/90 text-ink'}`}>
+              {(baseDimensions.x * scale).toFixed(2)}m W × {(baseDimensions.z * scale).toFixed(2)}m L
+            </div>
+            <button
+              onClick={() => setScale(1.0)}
+              className="absolute right-4 top-4 rounded-lg bg-paper/90 px-3 py-2 text-xs font-semibold uppercase tracking-widest text-ink shadow backdrop-blur-sm hover:bg-white transition-colors"
+            >
+              Original
+            </button>
+          </>
+        )}
       </div>
-
-      {baseDimensions.x > 0 && (
-        <div className="mb-8 flex w-full max-w-sm flex-col items-center gap-3">
-          <label className="text-[11px] font-medium uppercase tracking-widest text-ink-soft">
-            Adjust Size ({scale.toFixed(1)}x)
-          </label>
-          <input
-            type="range"
-            min="0.5"
-            max="2.5"
-            step="0.1"
-            value={scale}
-            onChange={(e) => setScale(parseFloat(e.target.value))}
-            className="w-full accent-electric"
-          />
-        </div>
-      )}
 
       <div className="flex flex-col gap-4 items-center mb-8">
         <button
