@@ -14,6 +14,7 @@ declare global {
         alt?: string;
         ar?: boolean;
         'ar-modes'?: string;
+        'ar-scale'?: string;
         'camera-controls'?: boolean;
         'disable-zoom'?: boolean;
         'auto-rotate'?: boolean;
@@ -31,6 +32,7 @@ interface Props {
 export default function ARViewer({ onRestart }: Props) {
   const [isMounted, setIsMounted] = useState(false)
   const [cameraActive, setCameraActive] = useState(false)
+  const [isPresentingAR, setIsPresentingAR] = useState(false)
   const [scale, setScale] = useState(1.0)
   const [baseDimensions, setBaseDimensions] = useState({ x: 0, y: 0, z: 0 })
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -109,13 +111,27 @@ export default function ARViewer({ onRestart }: Props) {
   useEffect(() => {
     const el = modelViewerRef.current
     if (!el) return
+
     const handleLoad = (e: any) => {
       if (typeof e.target.getDimensions === 'function') {
         setBaseDimensions(e.target.getDimensions())
       }
     }
+    
+    const onARStatus = (e: any) => {
+      if (e.detail.status === 'session-started') {
+        setIsPresentingAR(true)
+      } else if (e.detail.status === 'not-presenting') {
+        setIsPresentingAR(false)
+      }
+    }
+
     el.addEventListener('load', handleLoad)
-    return () => el.removeEventListener('load', handleLoad)
+    el.addEventListener('ar-status', onARStatus)
+    return () => {
+      el.removeEventListener('load', handleLoad)
+      el.removeEventListener('ar-status', onARStatus)
+    }
   }, [isMounted])
 
   const startCamera = async () => {
@@ -171,6 +187,7 @@ export default function ARViewer({ onRestart }: Props) {
             alt="A realistic 3D model of a solar panel"
             ar
             ar-modes="webxr scene-viewer quick-look"
+            ar-scale="fixed"
             camera-controls
             disable-zoom
             auto-rotate
@@ -183,6 +200,19 @@ export default function ARViewer({ onRestart }: Props) {
               touchAction: 'none'
             }}
           >
+            {(cameraActive || isPresentingAR) && baseDimensions.x > 0 && (
+              <>
+                <div className={`absolute pointer-events-none left-4 top-4 rounded-lg px-3 py-2 font-mono text-xs font-medium shadow backdrop-blur-sm transition-colors ${Math.abs(scale - 1.0) < 0.05 ? 'bg-green-500/90 text-white' : 'bg-paper/90 text-ink'}`}>
+                  {(baseDimensions.x * scale).toFixed(2)}m W × {(baseDimensions.z * scale).toFixed(2)}m L
+                </div>
+                <button
+                  onClick={() => setScale(1.0)}
+                  className="absolute right-4 top-4 rounded-lg bg-paper/90 px-3 py-2 text-xs font-semibold uppercase tracking-widest text-ink shadow backdrop-blur-sm hover:bg-white transition-colors"
+                >
+                  Original
+                </button>
+              </>
+            )}
             <button
               slot="ar-button"
               className="absolute bottom-6 left-1/2 -translate-x-1/2 rounded-full bg-electric px-6 py-3 text-xs font-semibold uppercase tracking-widest text-paper shadow-lg hover:bg-ink transition-colors md:px-8 md:py-4 md:text-sm"
@@ -194,20 +224,6 @@ export default function ARViewer({ onRestart }: Props) {
           <div className="flex h-full flex-col items-center justify-center gap-4 text-ink-soft">
             <span className="text-sm font-medium uppercase tracking-[0.2em]">Loading AR Module...</span>
           </div>
-        )}
-        
-        {isMounted && baseDimensions.x > 0 && (
-          <>
-            <div className={`absolute pointer-events-none left-4 top-4 rounded-lg px-3 py-2 font-mono text-xs font-medium shadow backdrop-blur-sm transition-colors ${Math.abs(scale - 1.0) < 0.05 ? 'bg-green-500/90 text-white' : 'bg-paper/90 text-ink'}`}>
-              {(baseDimensions.x * scale).toFixed(2)}m W × {(baseDimensions.z * scale).toFixed(2)}m L
-            </div>
-            <button
-              onClick={() => setScale(1.0)}
-              className="absolute right-4 top-4 rounded-lg bg-paper/90 px-3 py-2 text-xs font-semibold uppercase tracking-widest text-ink shadow backdrop-blur-sm hover:bg-white transition-colors"
-            >
-              Original
-            </button>
-          </>
         )}
       </div>
 
