@@ -14,9 +14,11 @@ declare global {
         alt?: string;
         ar?: boolean;
         'ar-modes'?: string;
+        'ar-modes'?: string;
         'camera-controls'?: boolean;
         'auto-rotate'?: boolean;
         'shadow-intensity'?: string;
+        scale?: string;
       }
     }
   }
@@ -29,7 +31,10 @@ interface Props {
 export default function ARViewer({ onRestart }: Props) {
   const [isMounted, setIsMounted] = useState(false)
   const [cameraActive, setCameraActive] = useState(false)
+  const [scale, setScale] = useState(1.0)
+  const [baseDimensions, setBaseDimensions] = useState({ x: 0, y: 0, z: 0 })
   const videoRef = useRef<HTMLVideoElement>(null)
+  const modelViewerRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
     import('@google/model-viewer')
@@ -41,6 +46,18 @@ export default function ARViewer({ onRestart }: Props) {
       stopCamera()
     }
   }, [])
+
+  useEffect(() => {
+    const el = modelViewerRef.current
+    if (!el) return
+    const handleLoad = (e: any) => {
+      if (typeof e.target.getDimensions === 'function') {
+        setBaseDimensions(e.target.getDimensions())
+      }
+    }
+    el.addEventListener('load', handleLoad)
+    return () => el.removeEventListener('load', handleLoad)
+  }, [isMounted])
 
   const startCamera = async () => {
     try {
@@ -90,19 +107,26 @@ export default function ARViewer({ onRestart }: Props) {
         {isMounted ? (
           // @ts-ignore
           <model-viewer
-            src="/solar_panel.glb"
+            ref={modelViewerRef}
+            src="/my_solar_panel.glb"
             alt="A realistic 3D model of a solar panel"
             ar
             ar-modes="webxr scene-viewer quick-look"
             camera-controls
             auto-rotate
             shadow-intensity="1"
+            scale={`${scale} ${scale} ${scale}`}
             style={{ 
               width: '100%', 
               height: '100%', 
               backgroundColor: cameraActive ? 'transparent' : '#E4E2DC' 
             }}
           >
+            {baseDimensions.x > 0 && (
+              <div className="absolute left-4 top-4 rounded-lg bg-paper/90 px-3 py-2 font-mono text-xs font-medium text-ink shadow backdrop-blur-sm">
+                {(baseDimensions.x * scale).toFixed(2)}m W × {(baseDimensions.z * scale).toFixed(2)}m L
+              </div>
+            )}
             <button
               slot="ar-button"
               className="absolute bottom-6 left-1/2 -translate-x-1/2 rounded-full bg-electric px-6 py-3 text-xs font-semibold uppercase tracking-widest text-paper shadow-lg hover:bg-ink transition-colors md:px-8 md:py-4 md:text-sm"
@@ -116,6 +140,23 @@ export default function ARViewer({ onRestart }: Props) {
           </div>
         )}
       </div>
+
+      {baseDimensions.x > 0 && (
+        <div className="mb-8 flex w-full max-w-sm flex-col items-center gap-3">
+          <label className="text-[11px] font-medium uppercase tracking-widest text-ink-soft">
+            Adjust Size ({scale.toFixed(1)}x)
+          </label>
+          <input
+            type="range"
+            min="0.5"
+            max="2.5"
+            step="0.1"
+            value={scale}
+            onChange={(e) => setScale(parseFloat(e.target.value))}
+            className="w-full accent-electric"
+          />
+        </div>
+      )}
 
       <div className="flex flex-col gap-4 items-center mb-8">
         <button
