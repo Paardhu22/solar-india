@@ -34,6 +34,10 @@ export default function ARViewer({ onRestart }: Props) {
   const [cameraActive, setCameraActive] = useState(false)
   const [isPresentingAR, setIsPresentingAR] = useState(false)
   const [scale, setScale] = useState(1.0)
+  const [rows, setRows] = useState(1)
+  const [cols, setCols] = useState(1)
+  const [modelUrl, setModelUrl] = useState('/my_solar_panel.glb')
+  const [isGeneratingModel, setIsGeneratingModel] = useState(false)
   const [baseDimensions, setBaseDimensions] = useState({ x: 0, y: 0, z: 0 })
   const videoRef = useRef<HTMLVideoElement>(null)
   const modelViewerRef = useRef<HTMLElement>(null)
@@ -109,6 +113,77 @@ export default function ARViewer({ onRestart }: Props) {
   }, [])
 
   useEffect(() => {
+    if (rows === 1 && cols === 1) {
+      setModelUrl('/my_solar_panel.glb')
+      return
+    }
+    
+    setIsGeneratingModel(true)
+    let active = true
+
+    const loadAndCreate = async () => {
+      try {
+        const THREE = await import('three')
+        const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader')
+        const { GLTFExporter } = await import('three/examples/jsm/exporters/GLTFExporter')
+
+        const loader = new GLTFLoader()
+        const gltf = await loader.loadAsync('/my_solar_panel.glb')
+
+        const newScene = new THREE.Scene()
+        
+        const box = new THREE.Box3().setFromObject(gltf.scene)
+        const size = box.getSize(new THREE.Vector3())
+        
+        const gap = 0.0762 // 3 inches in meters
+
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            const clone = gltf.scene.clone()
+            clone.position.x = c * (size.x + gap)
+            clone.position.z = r * (size.z + gap)
+            newScene.add(clone)
+          }
+        }
+
+        const exporter = new GLTFExporter()
+        exporter.parse(
+          newScene,
+          (gltfBuffer) => {
+            if (!active) return
+            const blob = new Blob([gltfBuffer as ArrayBuffer], { type: 'model/gltf-binary' })
+            const url = URL.createObjectURL(blob)
+            setModelUrl(url)
+            setIsGeneratingModel(false)
+          },
+          (error) => {
+            console.error("Export error", error)
+            if (active) setIsGeneratingModel(false)
+          },
+          { binary: true }
+        )
+      } catch (err) {
+        console.error("Error generating dynamic GLB", err)
+        if (active) setIsGeneratingModel(false)
+      }
+    }
+
+    loadAndCreate()
+    
+    return () => {
+      active = false
+    }
+  }, [rows, cols])
+
+  useEffect(() => {
+    return () => {
+      if (modelUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(modelUrl)
+      }
+    }
+  }, [modelUrl])
+
+  useEffect(() => {
     const el = modelViewerRef.current
     if (!el) return
 
@@ -134,7 +209,7 @@ export default function ARViewer({ onRestart }: Props) {
     }
   }, [isMounted])
 
-  const startCamera = async () => {
+  async function startCamera() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
         video: { facingMode: 'environment' } 
@@ -149,7 +224,7 @@ export default function ARViewer({ onRestart }: Props) {
     }
   }
 
-  const stopCamera = () => {
+  function stopCamera() {
     if (videoRef.current && videoRef.current.srcObject) {
       const stream = videoRef.current.srcObject as MediaStream
       stream.getTracks().forEach(track => track.stop())
@@ -180,10 +255,10 @@ export default function ARViewer({ onRestart }: Props) {
 
         {/* 3D Model Viewer */}
         {isMounted ? (
-          // @ts-ignore
+          // @ts-expect-error model-viewer is a custom element
           <model-viewer
             ref={modelViewerRef}
-            src="/my_solar_panel.glb"
+            src={modelUrl}
             alt="A realistic 3D model of a solar panel"
             ar
             ar-modes="webxr scene-viewer quick-look"
@@ -211,8 +286,35 @@ export default function ARViewer({ onRestart }: Props) {
                 >
                   Original
                 </button>
+
+                <div className="absolute bottom-24 left-1/2 flex -translate-x-1/2 gap-6 rounded-2xl bg-paper/90 px-4 py-3 shadow backdrop-blur-sm">
+                  <div className="flex flex-col items-center">
+                    <span className="mb-1 text-[10px] font-bold uppercase tracking-widest text-ink-soft">Columns</span>
+                    <div className="flex items-center gap-3">
+                      <button onClick={() => setCols(Math.max(1, cols - 1))} className="flex h-6 w-6 items-center justify-center rounded-full bg-bone text-ink hover:bg-electric hover:text-paper font-bold transition-colors">-</button>
+                      <span className="font-mono text-sm font-medium w-3 text-center">{cols}</span>
+                      <button onClick={() => setCols(cols + 1)} className="flex h-6 w-6 items-center justify-center rounded-full bg-bone text-ink hover:bg-electric hover:text-paper font-bold transition-colors">+</button>
+                    </div>
+                  </div>
+                  <div className="h-full w-px bg-bone"></div>
+                  <div className="flex flex-col items-center">
+                    <span className="mb-1 text-[10px] font-bold uppercase tracking-widest text-ink-soft">Rows</span>
+                    <div className="flex items-center gap-3">
+                      <button onClick={() => setRows(Math.max(1, rows - 1))} className="flex h-6 w-6 items-center justify-center rounded-full bg-bone text-ink hover:bg-electric hover:text-paper font-bold transition-colors">-</button>
+                      <span className="font-mono text-sm font-medium w-3 text-center">{rows}</span>
+                      <button onClick={() => setRows(rows + 1)} className="flex h-6 w-6 items-center justify-center rounded-full bg-bone text-ink hover:bg-electric hover:text-paper font-bold transition-colors">+</button>
+                    </div>
+                  </div>
+                </div>
               </>
             )}
+            
+            {isGeneratingModel && (
+              <div className="absolute inset-0 flex items-center justify-center bg-paper/50 backdrop-blur-sm z-50">
+                <span className="rounded-full bg-ink px-6 py-3 text-xs font-semibold uppercase tracking-widest text-paper shadow-lg">Generating Grid...</span>
+              </div>
+            )}
+            
             <button
               slot="ar-button"
               className="absolute bottom-6 left-1/2 -translate-x-1/2 rounded-full bg-electric px-6 py-3 text-xs font-semibold uppercase tracking-widest text-paper shadow-lg hover:bg-ink transition-colors md:px-8 md:py-4 md:text-sm"
