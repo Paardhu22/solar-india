@@ -40,6 +40,9 @@ export default function ARViewer({ onRestart }: Props) {
   const [modelUrl, setModelUrl] = useState('/my_solar_panel.glb')
   const [isGeneratingModel, setIsGeneratingModel] = useState(false)
   const [baseDimensions, setBaseDimensions] = useState({ x: 0, y: 0, z: 0 })
+  const [location, setLocation] = useState<{lat: number, lng: number} | null>(null)
+  const [initialCompassHeading, setInitialCompassHeading] = useState<number | null>(null)
+  const [compassPermission, setCompassPermission] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
   const modelViewerRef = useRef<HTMLElement>(null)
   const scaleRef = useRef(1.0)
@@ -47,6 +50,32 @@ export default function ARViewer({ onRestart }: Props) {
   useEffect(() => {
     scaleRef.current = scale
   }, [scale])
+
+  useEffect(() => {
+    if (!cameraActive || !compassPermission || initialCompassHeading !== null) return
+
+    const handleOrientation = (e: any) => {
+      let heading = null
+      if (e.webkitCompassHeading !== undefined) {
+        heading = e.webkitCompassHeading
+      } else if (e.absolute === true && e.alpha !== null) {
+        heading = 360 - e.alpha
+      } else if (e.alpha !== null && e.webkitCompassHeading === undefined) {
+        heading = 360 - e.alpha 
+      }
+      if (heading !== null) {
+        setInitialCompassHeading(heading)
+      }
+    }
+    
+    window.addEventListener('deviceorientationabsolute', handleOrientation)
+    window.addEventListener('deviceorientation', handleOrientation)
+    
+    return () => {
+      window.removeEventListener('deviceorientationabsolute', handleOrientation)
+      window.removeEventListener('deviceorientation', handleOrientation)
+    }
+  }, [cameraActive, compassPermission, initialCompassHeading])
 
   useEffect(() => {
     const el = modelViewerRef.current
@@ -114,11 +143,6 @@ export default function ARViewer({ onRestart }: Props) {
   }, [])
 
   useEffect(() => {
-    if (rows === 1 && cols === 1) {
-      setModelUrl('/my_solar_panel.glb')
-      return
-    }
-    
     setIsGeneratingModel(true)
     let active = true
 
@@ -138,14 +162,31 @@ export default function ARViewer({ onRestart }: Props) {
         
         const gap = 0.0762 // 3 inches in meters
 
+        const group = new THREE.Group()
+
         for (let r = 0; r < rows; r++) {
           for (let c = 0; c < cols; c++) {
             const clone = gltf.scene.clone()
             clone.position.x = c * (size.x + gap)
             clone.position.z = r * (size.z + gap)
-            newScene.add(clone)
+            group.add(clone)
           }
         }
+
+        // Center the group
+        const groupBox = new THREE.Box3().setFromObject(group)
+        const center = groupBox.getCenter(new THREE.Vector3())
+        group.position.sub(center)
+
+        // Apply 17-degree tilt
+        group.rotation.x = THREE.MathUtils.degToRad(-17)
+        
+        // Apply Compass alignment (South)
+        if (initialCompassHeading !== null) {
+          group.rotation.y = THREE.MathUtils.degToRad(180 - initialCompassHeading)
+        }
+
+        newScene.add(group)
 
         const exporter = new GLTFExporter()
         exporter.parse(
@@ -174,7 +215,7 @@ export default function ARViewer({ onRestart }: Props) {
     return () => {
       active = false
     }
-  }, [rows, cols])
+  }, [rows, cols, initialCompassHeading])
 
   useEffect(() => {
     return () => {
@@ -218,6 +259,27 @@ export default function ARViewer({ onRestart }: Props) {
       if (videoRef.current) {
         videoRef.current.srcObject = stream
         setCameraActive(true)
+      }
+
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+          (err) => console.error("Geolocation error:", err),
+          { enableHighAccuracy: true }
+        )
+      }
+
+      if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
+        try {
+          const permissionState = await (DeviceOrientationEvent as any).requestPermission()
+          if (permissionState === 'granted') {
+            setCompassPermission(true)
+          }
+        } catch (e) {
+          console.error("Compass permission error:", e)
+        }
+      } else {
+        setCompassPermission(true)
       }
     } catch (err) {
       console.error("Error accessing webcam:", err)
@@ -281,6 +343,14 @@ export default function ARViewer({ onRestart }: Props) {
                 <div className={`absolute pointer-events-none left-4 top-4 rounded-lg px-3 py-2 font-mono text-xs font-medium shadow backdrop-blur-sm transition-colors ${Math.abs(scale - 1.0) < 0.05 ? 'bg-green-500/90 text-white' : 'bg-paper/90 text-ink'}`}>
                   {(baseDimensions.x * scale).toFixed(2)}m W × {(baseDimensions.z * scale).toFixed(2)}m L
                 </div>
+                
+                {location && (
+                  <div className="absolute pointer-events-none left-4 top-16 rounded-lg bg-paper/90 px-3 py-2 font-mono text-[10px] font-medium text-ink shadow backdrop-blur-sm">
+                    Lat: {location.lat.toFixed(5)}<br/>
+                    Lng: {location.lng.toFixed(5)}
+                  </div>
+                )}
+
                 <button
                   onClick={() => setScale(1.0)}
                   className="absolute right-4 top-4 rounded-lg bg-paper/90 px-3 py-2 text-xs font-semibold uppercase tracking-widest text-ink shadow backdrop-blur-sm hover:bg-white transition-colors"
