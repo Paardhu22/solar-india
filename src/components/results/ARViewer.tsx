@@ -181,9 +181,16 @@ export default function ARViewer({ onRestart }: Props) {
         // Apply 17-degree tilt
         group.rotation.x = THREE.MathUtils.degToRad(-17)
         
-        // Apply Compass alignment (South)
+        // Apply Compass alignment (South for Northern Hemisphere, North for Southern Hemisphere)
         if (initialCompassHeading !== null) {
-          group.rotation.y = THREE.MathUtils.degToRad(180 - initialCompassHeading)
+          // Default to South (India is in Northern Hemisphere so it will face South)
+          let targetHeading = 180 
+          
+          if (location && location.lat < 0) {
+            targetHeading = 0 // Face North if in Southern Hemisphere
+          }
+          
+          group.rotation.y = THREE.MathUtils.degToRad(targetHeading - initialCompassHeading)
         }
 
         newScene.add(group)
@@ -251,6 +258,29 @@ export default function ARViewer({ onRestart }: Props) {
     }
   }, [isMounted])
 
+  async function requestPermissions() {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        (err) => console.error("Geolocation error:", err),
+        { enableHighAccuracy: true }
+      )
+    }
+
+    if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
+      try {
+        const permissionState = await (DeviceOrientationEvent as any).requestPermission()
+        if (permissionState === 'granted') {
+          setCompassPermission(true)
+        }
+      } catch (e) {
+        console.error("Compass permission error:", e)
+      }
+    } else {
+      setCompassPermission(true)
+    }
+  }
+
   async function startCamera() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
@@ -260,27 +290,7 @@ export default function ARViewer({ onRestart }: Props) {
         videoRef.current.srcObject = stream
         setCameraActive(true)
       }
-
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (pos) => setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-          (err) => console.error("Geolocation error:", err),
-          { enableHighAccuracy: true }
-        )
-      }
-
-      if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
-        try {
-          const permissionState = await (DeviceOrientationEvent as any).requestPermission()
-          if (permissionState === 'granted') {
-            setCompassPermission(true)
-          }
-        } catch (e) {
-          console.error("Compass permission error:", e)
-        }
-      } else {
-        setCompassPermission(true)
-      }
+      requestPermissions()
     } catch (err) {
       console.error("Error accessing webcam:", err)
       alert("Could not access your camera. Please ensure permissions are granted.")
@@ -388,6 +398,7 @@ export default function ARViewer({ onRestart }: Props) {
             
             <button
               slot="ar-button"
+              onClick={requestPermissions}
               className="absolute bottom-6 left-1/2 -translate-x-1/2 rounded-full bg-electric px-6 py-3 text-xs font-semibold uppercase tracking-widest text-paper shadow-lg hover:bg-ink transition-colors md:px-8 md:py-4 md:text-sm"
             >
               View in AR
