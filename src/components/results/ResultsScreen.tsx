@@ -7,6 +7,7 @@ import SplitText from '@/components/primitives/SplitText'
 import CountUp from '@/components/primitives/CountUp'
 import SmoothScroll from '@/components/chrome/SmoothScroll'
 import ARViewer from './ARViewer'
+import Image from 'next/image'
 import { Burst, Disc } from '@/components/art/Shapes'
 
 interface Props {
@@ -57,6 +58,12 @@ export default function ResultsScreen({ results, answers, insights, onRestart }:
 
       {/* ---------- POSTER ---------- */}
       <section className="relative flex min-h-[100svh] flex-col justify-center overflow-hidden px-5 pb-16 pt-28 md:px-10">
+        
+        {/* LOGO */}
+        <div className="absolute left-5 top-5 md:left-10 md:top-8 z-20 flex items-center">
+          <Image src="/logo.png" alt="Ashwitha Energy Services" width={64} height={64} className="object-contain" priority />
+        </div>
+
         <div className="anim-spin-slow pointer-events-none absolute -right-[20vw] -top-[20vw] h-[60vw] w-[60vw] opacity-[0.07]">
           <Burst color="var(--color-ink)" spokes={40} sw={1.4} />
         </div>

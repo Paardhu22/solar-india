@@ -2,8 +2,6 @@
 
 import { motion, AnimatePresence } from 'framer-motion'
 
-import Image from 'next/image'
-
 interface NavProps {
   step?: number // 1-based; omit outside the question flow
   total?: number
@@ -12,24 +10,14 @@ interface NavProps {
   invert?: boolean
 }
 
-/** Minimal chrome with logo, progress, and skip button */
+/** Minimal chrome with progress and skip button */
 export default function Navigation({ step, total, onSkip, onHome, invert }: NavProps) {
   const ink = invert ? 'text-paper' : 'text-ink'
   return (
     <nav
       className={`fixed inset-x-0 top-0 z-50 flex items-center justify-between px-5 py-4 md:px-10 md:py-6 ${ink}`}
     >
-      <div className="flex items-center">
-        {onHome ? (
-          <button onClick={onHome} className="flex items-center hover:opacity-75 transition-opacity">
-            <Image src="/logo.png" alt="Ashwitha Energy Services" width={48} height={48} className="object-contain" priority />
-          </button>
-        ) : (
-          <div className="flex items-center">
-            <Image src="/logo.png" alt="Ashwitha Energy Services" width={48} height={48} className="object-contain" priority />
-          </div>
-        )}
-      </div>
+      <div />
 
       <div className="flex items-center gap-5 md:gap-8">
         <AnimatePresence>
