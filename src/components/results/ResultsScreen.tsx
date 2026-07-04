@@ -58,12 +58,6 @@ export default function ResultsScreen({ results, answers, insights, onRestart }:
 
       {/* ---------- POSTER ---------- */}
       <section className="relative flex min-h-[100svh] flex-col justify-center overflow-hidden px-5 pb-16 pt-28 md:px-10">
-        
-        {/* LOGO */}
-        <div className="absolute left-5 top-5 md:left-10 md:top-8 z-20 flex items-center">
-          <Image src="/logo.png" alt="Ashwitha Energy Services" width={64} height={64} className="object-contain" priority />
-        </div>
-
         <div className="anim-spin-slow pointer-events-none absolute -right-[20vw] -top-[20vw] h-[60vw] w-[60vw] opacity-[0.07]">
           <Burst color="var(--color-ink)" spokes={40} sw={1.4} />
         </div>
@@ -173,6 +167,50 @@ export default function ResultsScreen({ results, answers, insights, onRestart }:
 
       {/* ---------- AR VIEWER ---------- */}
       <ARViewer onRestart={onRestart} />
+
+      {/* ---------- COMPANY / CTA ---------- */}
+      <section className="px-5 py-24 md:px-10 bg-ink text-paper flex flex-col items-center justify-center text-center">
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.3 }}
+          transition={{ duration: 0.8 }}
+          className="max-w-4xl w-full flex flex-col items-center"
+        >
+          <div className="mb-12 rounded-3xl bg-paper p-8 md:p-12 shadow-2xl">
+            <Image src="/logo.png" alt="Ashwitha Energy Services" width={200} height={200} className="object-contain" />
+          </div>
+
+          <h2 className="mb-6 font-display text-4xl font-semibold md:text-6xl text-electric">
+            <SplitText per="word" trigger="inView" stagger={0.05}>Best Time to Go Solar</SplitText>
+          </h2>
+          
+          <h3 className="mb-12 font-display text-2xl font-medium md:text-4xl text-paper/90">
+            Get up to <span className="text-solar font-semibold">₹78,000 Subsidy</span>
+          </h3>
+
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 w-full mb-16 text-left">
+            <div className="border-t border-paper/20 pt-6">
+              <span className="block text-[11px] font-medium uppercase tracking-[0.25em] text-paper/50 mb-2">Government Funding</span>
+              <span className="block font-display text-3xl font-semibold text-paper">₹75,000 Crores</span>
+              <span className="block text-paper/70 mt-2">Allocated for nationwide solar subsidies. Secure yours today.</span>
+            </div>
+            
+            <div className="border-t border-paper/20 pt-6">
+              <span className="block text-[11px] font-medium uppercase tracking-[0.25em] text-paper/50 mb-2">Track Record</span>
+              <span className="block font-display text-3xl font-semibold text-flame">630+</span>
+              <span className="block text-paper/70 mt-2">Successful installations powering homes across the region.</span>
+            </div>
+          </div>
+
+          <div className="border border-paper/20 bg-paper/5 p-8 md:p-10 text-center w-full">
+            <h4 className="font-display text-2xl md:text-3xl font-semibold mb-4 text-paper">Ashwitha Energy Services</h4>
+            <p className="text-paper/80 md:text-lg max-w-2xl mx-auto">
+              We are a rapidly growing solar installer dedicated to driving green energy adoption. From subsidy processing to flawless execution, we make your transition to solar seamless and profitable.
+            </p>
+          </div>
+        </motion.div>
+      </section>
     </div>
   )
 }
